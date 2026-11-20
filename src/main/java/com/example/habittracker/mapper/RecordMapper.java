@@ -7,6 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class RecordMapper {
     public RecordResponse toResponse(HabitRecord record) {
-        return new RecordResponse(record.getId(), record.getHabitId(), record.getDate());
+        return new RecordResponse(record.getId(), record.getHabit().getId(), record.getDate());
     }
 }

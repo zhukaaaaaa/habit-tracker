@@ -1,55 +1,57 @@
 package com.example.habittracker.service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 import com.example.habittracker.dto.*;
 import com.example.habittracker.entity.Habit;
 import com.example.habittracker.exception.HabitNotFoundException;
 import com.example.habittracker.mapper.HabitMapper;
+import com.example.habittracker.repository.HabitRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class HabitService {
+    private final HabitRepository repository;
     private final HabitMapper mapper;
-    private final Map<Long, Habit> habits = new HashMap<>();
-    private long nextId = 1;
 
-    public synchronized HabitResponse create(HabitRequest request) {
+    @Transactional
+    public HabitResponse create(HabitRequest request) {
         Habit habit = new Habit();
-        habit.setId(nextId++);
         habit.setCreatedAt(LocalDateTime.now());
         apply(habit, request);
-        habits.put(habit.getId(), habit);
+        habit = repository.save(habit);
         log.info("Created habit id={}", habit.getId());
         return mapper.toResponse(habit);
     }
 
-    public synchronized List<HabitResponse> getAll() {
-        return habits.values().stream().sorted(Comparator.comparing(Habit::getId)).map(mapper::toResponse).toList();
+    public List<HabitResponse> getAll() {
+        return repository.findAll(Sort.by("id")).stream().map(mapper::toResponse).toList();
     }
 
-    public synchronized HabitResponse getById(Long id) { return mapper.toResponse(requireHabit(id)); }
+    public HabitResponse getById(Long id) { return mapper.toResponse(requireHabit(id)); }
 
-    public synchronized HabitResponse update(Long id, HabitRequest request) {
+    @Transactional
+    public HabitResponse update(Long id, HabitRequest request) {
         Habit habit = requireHabit(id);
         apply(habit, request);
-        return mapper.toResponse(habit);
+        return mapper.toResponse(repository.save(habit));
     }
 
-    public synchronized void delete(Long id) {
-        requireHabit(id);
-        habits.remove(id);
+    @Transactional
+    public void delete(Long id) {
+        repository.delete(requireHabit(id));
         log.info("Deleted habit id={}", id);
     }
 
-    private Habit requireHabit(Long id) {
-        Habit habit = habits.get(id);
-        if (habit == null) throw new HabitNotFoundException(id);
-        return habit;
+    public Habit requireHabit(Long id) {
+        return repository.findById(id).orElseThrow(() -> new HabitNotFoundException(id));
     }
 
     private void apply(Habit habit, HabitRequest request) {
