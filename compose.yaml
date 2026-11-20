@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: habit_tracker
+      POSTGRES_USER: ${DB_USERNAME:-habit_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Create .env first}
+    volumes:
+      - habit_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d habit_tracker"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/habit_tracker
+      DB_USERNAME: ${DB_USERNAME:-habit_app}
+      DB_PASSWORD: ${DB_PASSWORD:?Create .env first}
+      JWT_SECRET: ${JWT_SECRET:?Create .env first}
+      SERVER_ADDRESS: 0.0.0.0
+      TZ: "${APP_TZ:-UTC}"
+    ports:
+      - "127.0.0.1:8080:8080"
+volumes:
+  habit_data:

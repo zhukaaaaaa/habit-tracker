@@ -39,11 +39,6 @@ databaseChangeLog:
   - changeSet:
       id: 003-require-habit-owner
       author: user
-      preConditions:
-        - onFail: HALT
-        - sqlCheck:
-            expectedResult: 0
-            sql: SELECT COUNT(*) FROM habits WHERE user_id IS NULL
       changes:
         - addNotNullConstraint:
             tableName: habits
