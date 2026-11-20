@@ -23,6 +23,9 @@ public class Habit {
     private int target;
     @Column(nullable = false)
     private LocalDateTime createdAt;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     @OneToMany(mappedBy = "habit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<HabitRecord> records = new ArrayList<>();
 }

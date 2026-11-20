@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-users-table
+      author: user
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+        - addColumn:
+            tableName: habits
+            columns:
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_habits_user
+                    references: users(id)
+  - changeSet:
+      id: 003-require-habit-owner
+      author: user
+      preConditions:
+        - onFail: HALT
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM habits WHERE user_id IS NULL
+      changes:
+        - addNotNullConstraint:
+            tableName: habits
+            columnName: user_id
+            columnDataType: BIGINT

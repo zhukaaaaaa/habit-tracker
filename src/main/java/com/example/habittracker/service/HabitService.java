@@ -9,7 +9,8 @@ import com.example.habittracker.mapper.HabitMapper;
 import com.example.habittracker.repository.HabitRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
+import com.example.habittracker.repository.UserRepository;
+import com.example.habittracker.security.CurrentUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class HabitService {
     private final HabitRepository repository;
     private final HabitMapper mapper;
+    private final CurrentUser currentUser;
+    private final UserRepository userRepository;
 
     @Transactional
     public HabitResponse create(HabitRequest request) {
         Habit habit = new Habit();
+        habit.setUser(userRepository.getReferenceById(currentUser.getId()));
         habit.setCreatedAt(LocalDateTime.now());
         apply(habit, request);
         habit = repository.save(habit);
@@ -32,7 +36,7 @@ public class HabitService {
     }
 
     public List<HabitResponse> getAll() {
-        return repository.findAll(Sort.by("id")).stream().map(mapper::toResponse).toList();
+        return repository.findByUserIdOrderByIdAsc(currentUser.getId()).stream().map(mapper::toResponse).toList();
     }
 
     public HabitResponse getById(Long id) { return mapper.toResponse(requireHabit(id)); }
@@ -51,7 +55,7 @@ public class HabitService {
     }
 
     public Habit requireHabit(Long id) {
-        return repository.findById(id).orElseThrow(() -> new HabitNotFoundException(id));
+        return repository.findByIdAndUserId(id, currentUser.getId()).orElseThrow(() -> new HabitNotFoundException(id));
     }
 
     private void apply(Habit habit, HabitRequest request) {

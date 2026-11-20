@@ -10,3 +10,6 @@ spring:
     open-in-view: false
   liquibase:
     enabled: false
+jwt:
+  secret: dGVzdC1vbmx5LXNlY3JldC1rZXktMzItYnl0ZXMtbG9uZyE=
+  expiration-ms: 86400000

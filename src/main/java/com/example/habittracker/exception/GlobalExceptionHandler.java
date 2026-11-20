@@ -35,6 +35,21 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "Неверный формат запроса", List.of());
     }
 
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ApiError> invalidRequest(InvalidRequestException ex) {
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ApiError> unauthorized(Exception ex) {
+        return error(HttpStatus.UNAUTHORIZED, "Неверный логин или пароль", List.of());
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> dataConflict(Exception ex) {
+        return error(HttpStatus.CONFLICT, "Такая запись уже существует или конфликтует с данными", List.of());
+    }
+
     private ResponseEntity<ApiError> error(HttpStatus status, String message, List<String> details) {
         return ResponseEntity.status(status).body(new ApiError(status.value(), message, details));
     }
