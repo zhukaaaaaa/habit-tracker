@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: habit-tracker
+server:
+  port: 8080
